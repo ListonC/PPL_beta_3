@@ -1,0 +1,283 @@
+function CheckForMatch(_block){
+    var _type = _block.type;
+    var _matchList = ds_list_create();
+    var _x = _block.xSlot;
+    var _y = _block.ySlot;
+    
+    //Check horizontal
+    
+    var _tot = 1;
+    var _posList = ds_list_create();
+    if(CheckBoundsHorizontal(_x-1) && playerGrid[# _x-1, _y].type == _type){
+        tot += 1;
+        ds_list_add(_posList, playerGrid[# _x-1,_y]);
+        if(CheckBoundsHorizontal(_x-2) && playerGrid[# _x-2, _y].type == _type){
+            tot += 1;
+            ds_list_add(_posList, playerGrid[# _x-2, _y]);
+        }
+    }
+    if(CheckBoundsHorizontal(_x+1) && playerGrid[# _x+1, _y].type == _type){
+        tot += 1;
+        ds_list_add(_posList, playerGrid[# _x+1,_y]);
+        if(CheckBoundsHorizontal(_x-2) && playerGrid[# _x+2, _y].type == _type){
+            tot += 1;
+            ds_list_add(_posList, playerGrid[# _x+2, _y]);
+        }
+    }
+    if(_tot >= 3){
+        for(var i = 0; i < ds_list_size(_posList); i++){
+            ds_list_add(_matchList, _posList[| i];
+        }
+    }
+    
+    ds_list_clear(_posList);
+    _tot = 1;
+    
+    //Check Vertical
+    if(CheckBoundsVertical(_y-1) && playerGrid[# _x, _y-1].type == _type){
+        tot += 1;
+        ds_list_add(_posList, playerGrid[# _x,_y-1]);
+        if(CheckBoundsVertical(_y-2) && playerGrid[# _x, _y-2].type == _type){
+            tot += 1;
+            ds_list_add(_posList, playerGrid[# _x, _y-2]);
+        }
+    }
+    if(CheckBoundsVertical(_y+1) && playerGrid[# _x, _y+1].type == _type){
+        tot += 1;
+        ds_list_add(_posList, playerGrid[# _x,_y+1]);
+        if(CheckBoundsVertical(_y+2) && playerGrid[# _x, _y+2].type == _type){
+            tot += 1;
+            ds_list_add(_posList, playerGrid[# _x, _y+2]);
+        }
+    }
+    if(_tot >= 3){
+        for(var i = 0; i < ds_list_size(_posList); i++){
+            ds_list_add(_matchList, _posList[| i];
+        }
+    }
+    
+    ds_list_destroy(_posList);
+    
+    //Do something with your new _matchList.  Don't forget to destroy it later.
+    //for(var i = 0; i < ds_list_size(_matchList); i++){
+    //  _matchList[| i].blinking = true;
+    //}
+}
+function CheckBoundsHorizontal(_col){
+    if(_col >= 0 && _col <= 5){
+        return true;
+    }else{
+        return false;
+    }
+}
+function CheckBoundsVertical(_row){
+    if(_row >= 0 && _row <= 24){ //Or whatever your total is, i dun remember
+        return true;
+    }else{
+        return false;
+    }
+}
+
+
+
+////////////// Cassidys CheckForMatch
+function CheckForMatch(_block){
+
+	// Block-centric approach.
+	// imagine a "rook" on a chess board. It moves left as long as there are matches.
+	// when it can't move left anymore/no match, it counts number of moves+origin block. Then
+	// it moves to the right until there are no matches, and adds the number of moves. 
+	// if moves+origin is 3 or more, then isMatch for each of those blocks is Yes.
+	// Repeat this process downwards and then upwards. 
+
+	
+	if (_block.state == BLOCKSTATE.NULL or _block.type == BLOCKTYPE.BLANK) {
+		exit;	
+	}
+	
+	TotalMatches = 0;
+	SmallMatches = 0;
+	HorizontalThree = false;
+	VerticalThree = false;
+	var Rook = {
+		leftsteps : 1, // we start at 1 because the origin block is counted in a match
+		downsteps : 1,
+		rightsteps: 1,
+		upsteps   : 1,
+		type      : _block.type
+	}
+	
+	// First, left-direction.
+	if (_block.xSlot > 0) {
+		
+		for (var _walk = _block.xSlot; _walk > 0; _walk--) {
+			var _next = PlayerGrid[# _walk-1, _block.ySlot];
+			if (_next.state != BLOCKSTATE.ACTIVE or _next.type != _block.type) {
+				break;	// block is not eligble for matches, get out.
+			} else if (_next.type == _block.type) {
+				// we have a match.
+				Rook.leftsteps += 1;
+			}
+		}
+		if (Rook.leftsteps > 2) {
+			TotalMatches += 1;	
+		} else if (Rook.leftsteps == 2) {
+			SmallMatches += 1;
+		}
+	}
+	// Then, walk to the right.
+	if (_block.xSlot < 5) {
+			
+		for (var _walk = _block.xSlot; _walk < 5; _walk++) {
+			var _next = PlayerGrid[# _walk+1, _block.ySlot];
+			if (_next.state != BLOCKSTATE.ACTIVE or _next.type != _block.type) {
+				break;
+			} else if (_next.type == _block.type) {
+				Rook.rightsteps += 1;
+			}
+		}
+		if (Rook.rightsteps > 2) {
+			TotalMatches += 1;	
+		} else if (Rook.rightsteps == 2) {
+			SmallMatches += 1;	
+		}
+	}
+	
+	// this is a concession for middle blocks in a trio of blocks.
+	if (SmallMatches == 2) {
+		HorizontalThree = true;
+		SmallMatches = 0;
+	}
+	
+	// Then, walk downwards.
+	if (_block.ySlot > 1) {
+		
+		for (var _walk = _block.ySlot; _walk > 0; _walk--) {
+			var _next = PlayerGrid[# _block.xSlot, _walk-1];
+			if (_next.state != BLOCKSTATE.ACTIVE or _next.type != _block.type) {
+				break;	
+			} else if (_next.type == _block.type) {
+				Rook.downsteps += 1;
+			}
+		}
+		if (Rook.downsteps > 2) {
+			TotalMatches += 1;	
+		} else if (Rook.downsteps == 2) {
+			SmallMatches += 1;
+		}
+	}
+	
+	//Then walk upwards
+	if (_block.ySlot < 12) {
+		
+		for (var _walk = _block.ySlot; _walk < 12; _walk++) {
+			var _next = PlayerGrid[# _block.xSlot, _walk+1];
+			if (_next.state != BLOCKSTATE.ACTIVE or _next.type != _block.type) {
+				break;	
+			} else if (_next.type == _block.type) {
+				Rook.upsteps += 1;	
+			}
+		}
+		if (Rook.upsteps > 2) {
+			TotalMatches += 1;
+		} else if (Rook.upsteps == 2) {
+			SmallMatches += 1;
+		}
+	}
+	
+	if (SmallMatches == 2) {
+		VerticalThree = true;
+		SmallMatches = 0;
+	}
+	
+	// Was there a match?
+	if (TotalMatches == 0 and HorizontalThree == false and VerticalThree == false) {
+		exit;
+	} 
+	
+	if (TotalMatches > 0){
+		_block.isMatched = true; // origin block is match
+		_block.wasConsidered = true; // origin block ran this function
+		ds_list_add(ListMatch, _block); // add to the list of blocks to die
+		// Now, we gotta set the rest of the blocks to isMatched
+		// and if necessary, branch from them as well.
+		if (Rook.leftsteps > 2) {
+			for (var step = 1; step < Rook.leftsteps; step++) {
+				var _next = PlayerGrid[# _block.xSlot-step, _block.ySlot];
+				_next.isMatched = true;
+				if (_next.wasConsidered == false) { // have we not ran this function on this block?
+					CheckForMatch(_next);	// run a search with this block, too.
+				} // this block will eventually be wasConsidered = true.
+			}
+		}
+		if (Rook.downsteps > 2) {
+			for (var step = 1; step < Rook.downsteps; step++) {
+				var _next = PlayerGrid[# _block.xSlot, _block.ySlot-step];
+				_next.isMatched = true;
+				if (_next.wasConsidered == false) {
+					CheckForMatch(_next);
+				}
+			}
+		}
+		if (Rook.rightsteps > 2) {
+			for (var step = 1; step < Rook.rightsteps; step++) {
+				var _next = PlayerGrid[# _block.xSlot+step, _block.ySlot];
+				_next.isMatched = true;
+				if (_next.wasConsidered == false) {
+					CheckForMatch(_next);
+				}
+			}
+		}
+		if (Rook.upsteps > 2) {
+			for (var step = 1; step < Rook.upsteps; step++) {
+				var _next = PlayerGrid[# _block.xSlot, _block.ySlot-step];
+				_next.isMatched = true;
+				if (_next.wasConsidered == false) {
+					CheckForMatch(_next);
+				}
+			}
+		}
+	StopFrames += (20 * TotalMatches);
+	ds_list_add(ListRooks, Rook);
+	}
+	
+	if (HorizontalThree) {
+		_block.isMatched = true;
+		_block.wasConsidered = true;
+		ds_list_add(ListMatch, _block);
+		if (_block.xSlot > 0) {
+			var _leftblock = PlayerGrid[# _block.xSlot-1, _block.ySlot];
+			_leftblock.isMatched = true;
+			if (_leftblock.wasConsidered == false) {
+				CheckForMatch(_leftblock);
+			}
+		}
+		if (_block.xSlot < 5) {
+			var _rightblock = PlayerGrid[# _block.xSlot+1, _block.ySlot];
+			_rightblock.isMatched = true;
+			if (_rightblock.wasConsidered == false) {
+				CheckForMatch(_rightblock);	
+			}
+		}
+	}
+
+	if (VerticalThree) {
+		_block.isMatched = true;
+		_block.wasConsidered = true;
+		ds_list_add(ListMatch, _block);
+		if (_block.ySlot > 1) {
+			var _downblock = PlayerGrid[# _block.xSlot, _block.ySlot-1];
+			_downblock.isMatched = true;
+			if (_downblock.wasConsidered == false) {
+				CheckForMatch(_downblock);
+			}
+		}
+		if (_block.ySlot < 12) {
+			var _upblock = PlayerGrid[# _block.xSlot, _block.ySlot+1];
+			_upblock.isMatched = true;
+			if (_upblock.wasConsidered == false) {
+				CheckForMatch(_upblock);	
+			}
+		}
+	}
+}
